@@ -2,18 +2,21 @@
 if [ -f ~/.marker_functions ] ; then	
 	source ~/.marker_functions
 fi
+
+# Setting the PATH environment variable
+export PATH=/Users/hassanein.khafaji/opt/apache-maven-2.2.1/bin:/usr/local/bin:${PATH}:/Users/hassanein.khafaji/opt/vault-cli-3.1.6/bin:/usr/libexec:/usr/local/mysql/bin:/Users/khafaji/bin:/Users/hassanein.khafaji/opt/BookmarkerScript:/Users/hassanein.khafaji/Projects/CQ-Unix-Toolkit
+
 # Variables export section
 ###########################################################################
 export CATALINA_HOME="/Users/khafaji/opt/apache-tomcat-6.0.36"
-export PATH=/usr/local/bin:${PATH}:/Users/hassanein.khafaji/opt/vault-cli-3.1.6/bin:/usr/libexec:/usr/local/mysql/bin:/Users/khafaji/bin:/Users/hassanein.khafaji/opt/BookmarkerScript
-
-export MAVEN_OPTS="-Xmx1024M -XX:MaxPermSize=512m"
+export MAVEN_OPTS="-Xmx1024M -XX:MaxPermSize=1024m"
 export JAVA_HOME=$(java_home -v 1.6)
 export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;31m\]\w\[\033[00m\]\$ ' # Black background
 #export PS1='\[\033[01;34m\]\u@\h\[\033[30m\]:\[\033[01;38m\]\w\[\033[00m\]\$ ' # White background
 #export LSCOLORS='Eafxcxdxbxegedabagacad'
 export TERM=xterm-color
 export MANPAGER=more
+export CQ_PACKAGE_MANAGER_SERVICE="http://localhost:4502/crx/packmgr/service.jsp"
 
 
 ###########################################################################
@@ -31,7 +34,8 @@ alias cls="clear"
 alias things="open -a things"
 alias chrome="open -a Google Chrome"
 alias xcode="open -a xcode"
-alias sl="open -a Sublime\ Text.app"
+alias sl="open -a Sublime\ Text\ 2.app"
+alias bnd="java -jar /Users/hassanein.khafaji/opt/biz.aQute.bnd-latest.jar"
 
 # These are not needed now, but might need them in the future. It might be a good idea to write a very short blog post explaining the functionality for future reference
 # alias aut="curl -u admin:admin -d 'apply=true&action=ajaxConfigManager&wcmfilter.mode=edit&propertylist=wcmfilter.mode&submit=Save' http://localhost:4502/system/console/configMgr/com.day.cq.wcm.core.WCMRequestFilter"
@@ -115,6 +119,28 @@ function svnAddAll()
 function svnDeleteAll()
 {
   svn st | grep ^!  | awk '{print $2}' | xargs svn delete
+}
+
+# Here is a function that retrieves all the JARs that are available on Adobe CQ classpath
+# for later de-compilation and further examination to develop an understanding of how Adobe CQ works internally.
+function downloadAdobeCQJars()
+{
+	[ -z "$CRX_URL" ] && CRX_URL="http://localhost:4502"
+	[ -z "$CRX_CREDENTIALS" ] && CRX_CREDENTIALS="admin:admin"
+
+	# Get the CRX classpath and save it into a file for later processing
+	curl -H x-crxde-version:1.0 -H x-crxde-os:mac -H x-crxde-profile:default -u $CRX_CREDENTIALS $CRX_URL/bin/crxde.classpath.xml > .classpath 2> /dev/null	
+	FILELIST=$(cat .classpath | sed -n '/lib/s/.*WebContent\(.*\)\".*/\1/p')
+	
+	# download all the jars
+	for FILE in $FILELIST
+	do
+		echo "downloading $FILE ..."
+		curl -u $CRX_CREDENTIALS ${CRX_URL}${FILE} -O 2> /dev/null
+	done
+
+	# remove the temp files
+	rm -fr .classpath
 }
 
 # This is an example for how to automatically connect to a certain environment without interactively supplying a password
