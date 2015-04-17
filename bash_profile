@@ -4,29 +4,39 @@ if [ -f ~/.marker_functions ] ; then
 fi
 
 # Setting the PATH environment variable
-export PATH=/usr/local/Cellar/bison/3.0.2/bin:${PATH}:/Users/hassanein.khafaji/opt/vault-cli-2.4.40/bin:/usr/libexec:/usr/local/mysql/bin:/Users/khafaji/bin:/Users/hassanein.khafaji/opt/BookmarkerScript:/Users/hassanein.khafaji/Projects/CQ-Unix-Toolkit:~/bin:/Users/hassanein.khafaji/opt/gradle-1.12/bin:/Users/hassanein.khafaji/opt/jq/bin
-
+export PATH=/Users/hassanein.khafaji/Projects/CQ-Unix-Toolkit:/usr/local/Cellar/bison/3.0.2/bin:${PATH}:/Users/hassanein.khafaji/opt/vault-cli-2.4.40/bin:/usr/libexec:/usr/local/mysql/bin:/Users/khafaji/bin:/Users/hassanein.khafaji/opt/BookmarkerScript:/Users/hassanein.khafaji/Projects/CQ-Unix-Toolkit:~/bin:/Users/hassanein.khafaji/opt/gradle-1.12/bin:/Users/hassanein.khafaji/opt/jq/bin:/Users/hassanein.khafaji/opt/sonar-runner-2.4/bin
 
 # Source the openTunnels script to facilitate the tunnels creation for connecting to the environments behind bastion servers
 #. ~/bin/openTunnels.sh
 
 # Source git bash completion shell script obtained from git source code
-. ~/bin/git-completion.bash
+# . ~/bin/git-completion.bash
 
 # Source the commin bash_profile for the mini project
-. ~/bin/bash_profile.sh
+. /Users/hassanein.khafaji/bin/mini.digital.build.aem6/build-settings/bash_profile.sh
 
 # Variables export section
 ###########################################################################
+export GIT_BRANCH_NAME='${YELLOW}$(getGitBranchName)${WHITE}'
 export CATALINA_HOME="/Users/khafaji/opt/apache-tomcat-6.0.36"
 export MAVEN_OPTS="-Xmx1024M -XX:MaxPermSize=1024m"
 export JAVA_HOME=$(java_home -v 1.7)
-export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;31m\]\w\[\033[00m\]\$ ' # Black background
+export PS1="\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;31m\]\w\[\033[00m\] ${GIT_BRANCH_NAME}${BLACK}\$ \[\033[00m\]" # Black background
 #export PS1='\[\033[01;34m\]\u@\h\[\033[30m\]:\[\033[01;38m\]\w\[\033[00m\]\$ ' # White background
 #export LSCOLORS='Eafxcxdxbxegedabagacad'
 export TERM=xterm-color
 export MANPAGER=more
 export CQ_PACKAGE_MANAGER_SERVICE="http://localhost:4502/crx/packmgr/service.jsp"
+
+# Set screen colors to be used throughout our various functions to change output colour.
+export BLACK=$(tput setaf 0)
+export RED=$(tput setaf 1)
+export GREEN=$(tput setaf 2)
+export YELLOW=$(tput setaf 3)
+export BLUE=$(tput setaf 4)
+export MAGENTA=$(tput setaf 5)
+export CYAN=$(tput setaf 6)
+export WHITE=$(tput setaf 7)
 
 
 ###########################################################################
@@ -47,8 +57,8 @@ alias xcode="open -a xcode"
 alias sl="open -a Sublime\ Text.app"
 alias bnd="java -jar /Users/hassanein.khafaji/opt/biz.aQute.bnd-latest.jar"
 alias gitlog='git log --pretty=format:"%H: %Cred %an - %Cgreen %ad - %Cblue %s"'
-alias bp="sl ~/.bash_profile"
 alias st="git st"
+alias br="git br"
 
 # These are not needed now, but might need them in the future. It might be a good idea to write a very short blog post explaining the functionality for future reference
 alias aut="curl -u admin:admin -d 'apply=true&action=ajaxConfigManager&wcmfilter.mode=edit&propertylist=wcmfilter.mode&submit=Save' http://localhost:4502/system/console/configMgr/com.day.cq.wcm.core.WCMRequestFilter"
@@ -64,6 +74,8 @@ alias jd="open -a JD-GUI"
 
 alias prof="sl ~/.bash_profile"
 alias tempscript="sl ~/tmp/tmp.sh"
+
+alias reload=". ~/.bash_profile"
 
 ###########################################################################
 # Functions Definitions
@@ -136,6 +148,7 @@ function commit()
 	git add .
 	git commit -am "$1"
 }
+
 function svnDeleteAll()
 {
   svn st | grep ^!  | awk '{print $2}' | xargs svn delete
@@ -145,7 +158,7 @@ function svnDeleteAll()
 # for later de-compilation and further examination to develop an understanding of how Adobe CQ works internally.
 function downloadAdobeCQJars()
 {
-	[ -z "$CRX_URL" ] && CRX_URL="http://localhost:4502"
+	[ -z "$CRX_URL" ] && CRX_URL="http://vmd-mini-auth.emea.akqa.local:4502"
 	[ -z "$CRX_CREDENTIALS" ] && CRX_CREDENTIALS="admin:admin"
 
 	# Get the CRX classpath and save it into a file for later processing
@@ -163,44 +176,6 @@ function downloadAdobeCQJars()
 	rm -fr .classpath
 }
 
-function github()
-{
-	open -a /Applications/Google\ Chrome.app/ https://github.com/Humble-Phonix/Angry-Nerds/commit/$1
-}
-
-function buildLocal()
-{
-	src
-	cd build/local
-	mvn clean install -Dgit.branch=1.0.0.SNAPSHOT -Denv=local -P auto-deploy -P module-cms
-}
-
-function buildCms()
-{
-	cms
-	mvn clean install -Dgit.branch=1.0.0.SNAPSHOT -Denv=local -P auto-deploy -P module-cms
-}
-
-function packageCms()
-{
-	cms
-	mvn clean package -Dgit.branch=1.0.0.SNAPSHOT -Denv=local -P auto-deploy -P module-cms
-}
-
-function buildLocalWith1.7()
-{
-	src
-	cd build/local
-	mvn clean install -Dgit.branch=1.0.0.SNAPSHOT -Denv=cqtest -DskipTests
-}
-
-function packageLocal()
-{
-	src
-	cd build/local
-	mvn clean package -Dgit.branch=1.0.0.SNAPSHOT -Denv=local -P auto-deploy
-}
-
 function reOpenAllTunnels()
 {
 	nkill ssh
@@ -208,6 +183,37 @@ function reOpenAllTunnels()
 	. ~/bin/openTunnels.sh
 
 	openAllTunnels $1
+}
+
+function copyCommonBashProfile()
+{
+	cp ~/bin/bash_profile.sh /Users/hassanein.khafaji/Projects/mini/source/mini.digital.build.aem6/build-settings
+}
+
+function getGitBranchName()
+{
+	OPEN_PARENTHESES="("
+	CLOSE_PARENTHESES=")"
+
+	CURRENT_BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+	[ ! -z ${CURRENT_BRANCH} ] && echo "${OPEN_PARENTHESES}${CURRENT_BRANCH}${CLOSE_PARENTHESES} "
+}
+
+function toggleGitBranchInPrompt
+{
+	echo ${PS1} | grep getGitBranchName > /dev/null 2>&1
+	if ( test $? -eq "0")
+	then
+		export PS1=$(echo ${PS1} | sed "s/${GIT_BRANCH_NAME}//g")
+	else
+		export PS1=$(echo ${PS1} | sed "s_\(\\\$\)_${GIT_BRANCH_NAME}\1_")
+	fi
+}
+
+function t()
+{
+	SEARCH_WORD=$(echo $1 | tr '[:upper:]' '[:lower:]')
+	open -a /Applications/Google\ Chrome.app/ http://dictionary.cambridge.org/dictionary/british/${SEARCH_WORD}
 }
 
 # This is an example for how to automatically connect to a certain environment without interactively supplying a password
