@@ -3,32 +3,53 @@ if [ -f ~/.marker_functions ] ; then
 	source ~/.marker_functions
 fi
 
-# Setting the PATH environment variable
-export PATH=/Users/hassanein.khafaji/Projects/CQ-Unix-Toolkit:/usr/local/Cellar/bison/3.0.2/bin:${PATH}:/Users/hassanein.khafaji/opt/vault-cli-2.4.40/bin:/usr/libexec:/usr/local/mysql/bin:/Users/khafaji/bin:/Users/hassanein.khafaji/opt/BookmarkerScript:/Users/hassanein.khafaji/Projects/CQ-Unix-Toolkit:~/bin:/Users/hassanein.khafaji/opt/gradle-1.12/bin:/Users/hassanein.khafaji/opt/jq/bin:/Users/hassanein.khafaji/opt/sonar-runner-2.4/bin
+######################################################################################################################################################
+## 							                       SCRIPTS INCLUDE SECTION                 		            										##
+######################################################################################################################################################
 
-# Source the openTunnels script to facilitate the tunnels creation for connecting to the environments behind bastion servers
-#. ~/bin/openTunnels.sh
+# Git bash command line completion script
+ . ~/bin/git-completion.bash
 
-# Source git bash completion shell script obtained from git source code
-# . ~/bin/git-completion.bash
+# MASABI-RELATED CUSTOMIZATION SCRIPTS
+. ~/bin/bash_customizations/masabi_mpg_build.sh
+. ~/bin/bash_customizations/masabi_easily_connect_to_servers.sh
 
-# Source the commin bash_profile for the mini project
-. /Users/hassanein.khafaji/bin/mini.digital.build.aem6/build-settings/bash_profile.sh
+######################################################################################################################################################
+## 							                       PATH ENVIRONMENT VARIABLE SETUP                             										##
+######################################################################################################################################################
 
-# Variables export section
-###########################################################################
+OPT_BINARIES=/Users/hassanein.khafaji/opt/gradle-2.3/bin:/Users/hassanein.khafaji/opt/groovy-2.4.3/bin
+
+export PATH=${OPT_BINARIES}:/usr/local/Cellar/bison/3.0.2/bin:${PATH}:/Users/hassanein.khafaji/opt/vault-cli-2.4.40/bin:/usr/libexec:/usr/local/mysql/bin:/Users/khafaji/bin:/Users/hassanein.khafaji/opt/BookmarkerScript:~/bin:/Users/hassanein.khafaji/opt/gradle-1.12/bin:/Users/hassanein.khafaji/opt/jq/bin:/Users/hassanein.khafaji/opt/sonar-runner-2.4/bin:/Users/hassanein.khafaji/Projects/GoStuff/bin
+
+# Setting PATH for Python 3.4
+# The orginal version is saved in .bash_profile.pysave
+PATH="/Library/Frameworks/Python.framework/Versions/3.4/bin:${PATH}"
+export PATH
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+
+######################################################################################################################################################
+## 							                       COMMON VARIABLES export                 		            										##
+######################################################################################################################################################
+
 export GIT_BRANCH_NAME='${YELLOW}$(getGitBranchName)${WHITE}'
-export CATALINA_HOME="/Users/khafaji/opt/apache-tomcat-6.0.36"
 export MAVEN_OPTS="-Xmx1024M -XX:MaxPermSize=1024m"
+export CATALINA_HOME="/usr/local/Cellar/tomcat7/7.0.61/libexec"
 export JAVA_HOME=$(java_home -v 1.7)
-export PS1="\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;31m\]\w\[\033[00m\] ${GIT_BRANCH_NAME}${BLACK}\$ \[\033[00m\]" # Black background
+
+##### PS1
+
+export PS1="\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;31m\] \W\[\033[00m\] ${GIT_BRANCH_NAME}${YELLOW}\$ \[\033[00m\]" # Black background
 #export PS1='\[\033[01;34m\]\u@\h\[\033[30m\]:\[\033[01;38m\]\w\[\033[00m\]\$ ' # White background
-#export LSCOLORS='Eafxcxdxbxegedabagacad'
+#export LSCOLORS='Eafxcxdxbxegedabagacad
+
 export TERM=xterm-color
 export MANPAGER=more
-export CQ_PACKAGE_MANAGER_SERVICE="http://localhost:4502/crx/packmgr/service.jsp"
+export SVN_EDITOR="vim"
 
-# Set screen colors to be used throughout our various functions to change output colour.
+# SCREEN COLORS
 export BLACK=$(tput setaf 0)
 export RED=$(tput setaf 1)
 export GREEN=$(tput setaf 2)
@@ -38,11 +59,15 @@ export MAGENTA=$(tput setaf 5)
 export CYAN=$(tput setaf 6)
 export WHITE=$(tput setaf 7)
 
+# MASABI
+export MASABI_SVN="https://svn.masabi.com/svn/"
 
-###########################################################################
-# Aliases Definitions
-###########################################################################
+
+######################################################################################################################################################
+## 							                                    COMMON ALIASES    	                 		            							##
+######################################################################################################################################################
 set -o vi
+
 alias r="fc -e -"
 alias o="open"
 alias chrome="open -a \"Google Chrome\""
@@ -73,13 +98,14 @@ alias killAllApps="ps -ef | grep /Applications | grep -v grep | grep -vi iterm |
 alias jd="open -a JD-GUI"
 
 alias prof="sl ~/.bash_profile"
-alias tempscript="sl ~/tmp/tmp.sh"
+alias tempscript="touch ~/tmp/tmp.sh && sl ~/tmp/tmp.sh"
 
-alias reload=". ~/.bash_profile"
+eval $(boot2docker shellinit 2> /dev/null)
 
-###########################################################################
-# Functions Definitions
-###########################################################################
+######################################################################################################################################################
+## 							                                    COMMON FUNCTIONS    	                 		            						##
+######################################################################################################################################################
+
 function mark()
 {
 	markme $*
@@ -185,23 +211,29 @@ function reOpenAllTunnels()
 	openAllTunnels $1
 }
 
-function copyCommonBashProfile()
-{
-	cp ~/bin/bash_profile.sh /Users/hassanein.khafaji/Projects/mini/source/mini.digital.build.aem6/build-settings
-}
-
 function getGitBranchName()
 {
 	OPEN_PARENTHESES="("
 	CLOSE_PARENTHESES=")"
-
-	CURRENT_BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+		
+	if weHaveATag
+		then			
+			CURRENT_BRANCH="$(git branch 2> /dev/null | grep '^*' | awk '{print $4}' | sed 's/)//g')"
+		else								
+			CURRENT_BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')						
+	fi
 	[ ! -z ${CURRENT_BRANCH} ] && echo "${OPEN_PARENTHESES}${CURRENT_BRANCH}${CLOSE_PARENTHESES} "
 }
 
+function weHaveATag()
+{
+	git branch 2> /dev/null | grep "detached from" > /dev/null	
+	return $?
+}	
+
 function toggleGitBranchInPrompt
 {
-	echo ${PS1} | grep getGitBranchName > /dev/null 2>&1
+	echo ${PS1} | grep getGitBranchName &> /dev/null
 	if ( test $? -eq "0")
 	then
 		export PS1=$(echo ${PS1} | sed "s/${GIT_BRANCH_NAME}//g")
@@ -216,18 +248,27 @@ function t()
 	open -a /Applications/Google\ Chrome.app/ http://dictionary.cambridge.org/dictionary/british/${SEARCH_WORD}
 }
 
-# This is an example for how to automatically connect to a certain environment without interactively supplying a password
-# function stagepublish()
-# {
-# 	expect -c 'spawn ssh weblogic@www.virginatlantic.stage.lbi.co.uk;expect "password:";send "w3bl0g1c\r";interact'
-# }
+function reload()
+{
+	. ~/.bash_profile
+	cd - &> /dev/null
+    figlet -f roman "Profile reloaded"
+}
 
-# Setting PATH for Python 3.4
-# The orginal version is saved in .bash_profile.pysave
-PATH="/Library/Frameworks/Python.framework/Versions/3.4/bin:${PATH}"
-export PATH
+function deleteAllDockerImages()
+{
+	for imageID in $(docker images | awk '{print $3}' | grep -v IMAGE)
+	do 
+		docker rmi --force ${imageID}
+	done
+}
 
-# Setting PATH for Python 3.4
-# The orginal version is saved in .bash_profile.pysave
-PATH="/Library/Frameworks/Python.framework/Versions/3.4/bin:${PATH}"
-export PATH
+function readlink()
+{
+	echo $@
+}
+
+function sendAlertToMpgHipchat()
+{
+  curl -X POST --header "content-type: application/json" "http://api.hipchat.com/v2/room/MPG-LOGGLY-ALERTS/notification?auth_token=UrxxngPc9UMO0Jq5ZOe6SuPnsNKgRqDLQsvYiXW7" --data '{"message":"$1"}'
+}
